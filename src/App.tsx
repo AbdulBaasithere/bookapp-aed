@@ -41,12 +41,12 @@ async function safeParseResponse(res: Response): Promise<any> {
   }
   throw new Error('Server returned non-JSON response.');
 }
-import { 
-  DEFAULT_BUSINESS, 
-  DEFAULT_STAFF, 
-  DEFAULT_CLIENTS, 
-  DEFAULT_PACKAGES, 
-  DEFAULT_BOOKINGS, 
+import {
+  DEFAULT_BUSINESS,
+  DEFAULT_STAFF,
+  DEFAULT_CLIENTS,
+  DEFAULT_PACKAGES,
+  DEFAULT_BOOKINGS,
   DEFAULT_PAYMENTS,
   DEFAULT_SERVICES,
   DEFAULT_LIVE_FEED
@@ -63,12 +63,12 @@ import SettingsConfig from './components/SettingsConfig';
 import ChatBot from './components/ChatBot';
 
 // Icons
-import { 
-  LayoutDashboard, 
-  Calendar as CalendarIcon, 
-  Users, 
-  Ticket, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Calendar as CalendarIcon,
+  Users,
+  Ticket,
+  CreditCard,
   Settings as SettingsIcon,
   Sparkles,
   ShieldCheck,
@@ -180,7 +180,7 @@ export default function App() {
           if (session?.user) {
             setUser(session.user);
           }
-          
+
           const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
               setUser(session.user);
@@ -199,7 +199,7 @@ export default function App() {
         setAuthChecked(true);
       }
     }
-    
+
     checkAuth();
 
     return () => {
@@ -232,7 +232,7 @@ export default function App() {
 
       if (result.success && result.data) {
         const { data } = result;
-        
+
         let targetBizId = activeBusinessId;
         if (activeBusinessId === 'biz-1' && user) {
           const mappedId = `biz-1-${user.id}`;
@@ -313,13 +313,13 @@ export default function App() {
     if (client) {
       await client.auth.signOut();
     }
-    
+
     // Clear all client-side cached data in local storage
     localStorage.removeItem('glance_auth_bypassed');
     localStorage.removeItem('glance_businesses');
     localStorage.removeItem('glance_active_business_id');
     localStorage.removeItem('glance_live_feed');
-    
+
     try {
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
@@ -421,7 +421,7 @@ export default function App() {
             // Brand new user without database records.
             // Push current local state to the database to back it up.
             const initialBizs = businesses.map(b => ({ ...b, id: b.id || 'biz-1' }));
-            
+
             await performSupabaseSync({
               userId: user.id,
               activeBusinessId,
@@ -624,7 +624,7 @@ export default function App() {
                 setPackages(data.payload.packages);
                 localStorage.setItem(`glance_packages_${activeBusinessId}`, JSON.stringify(data.payload.packages));
               }
-              
+
               if (data.event) {
                 if (!data.event.businessId || data.event.businessId === activeBusinessId) {
                   setLiveFeed(prev => {
@@ -750,7 +750,7 @@ export default function App() {
   // Helper to save state & synchronize local storage
   const saveState = (key: string, value: any, setter: Function) => {
     setter(value);
-    
+
     // Auto-scope standard state keys to the active business
     let storageKey = key;
     if (
@@ -764,7 +764,7 @@ export default function App() {
     ) {
       storageKey = `${key}_${activeBusinessId}`;
     }
-    
+
     localStorage.setItem(storageKey, JSON.stringify(value));
   };
 
@@ -793,7 +793,7 @@ export default function App() {
 
       if (result.success && result.data) {
         const { data } = result;
-        
+
         let targetBizId = activeBusinessId;
         if (activeBusinessId === 'biz-1' && user) {
           const mappedId = `biz-1-${user.id}`;
@@ -922,7 +922,7 @@ export default function App() {
     const updated = [...businesses, freshBiz];
     setBusinesses(updated);
     localStorage.setItem('glance_businesses', JSON.stringify(updated));
-    
+
     // Auto-switch to the new business portal
     setActiveBusinessId(newId);
     localStorage.setItem('glance_active_business_id', newId);
@@ -1170,7 +1170,7 @@ export default function App() {
 
     const associatedPayments = payments.filter(p => p.linkedBookingId === bookingId);
     const affectedPackages = target.linkedPackageId ? packages.filter(p => p.id === target.linkedPackageId) : [];
-    
+
     setLastDeletedBooking({
       booking: target,
       payments: associatedPayments,
@@ -1499,7 +1499,7 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':
         return (
-          <Dashboard 
+          <Dashboard
             bookings={bookings}
             payments={payments}
             packages={packages}
@@ -1524,7 +1524,7 @@ export default function App() {
         );
       case 'calendar':
         return (
-          <CalendarView 
+          <CalendarView
             bookings={bookings}
             staff={staff}
             clients={clients}
@@ -1544,7 +1544,7 @@ export default function App() {
         );
       case 'clients':
         return (
-          <ClientProfiles 
+          <ClientProfiles
             clients={clients}
             bookings={bookings}
             packages={packages}
@@ -1559,7 +1559,7 @@ export default function App() {
         );
       case 'packages':
         return (
-          <PackagesTracker 
+          <PackagesTracker
             packages={packages}
             clients={clients}
             onSellPackage={handleSellPackage}
@@ -1568,7 +1568,7 @@ export default function App() {
         );
       case 'payments':
         return (
-          <PaymentsLedger 
+          <PaymentsLedger
             payments={payments}
             clients={clients}
             bookings={bookings}
@@ -1581,7 +1581,7 @@ export default function App() {
         );
       case 'settings':
         return (
-          <SettingsConfig 
+          <SettingsConfig
             business={business}
             staff={staff}
             onUpdateBusiness={handleUpdateBusiness}
@@ -1621,9 +1621,9 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center space-y-4">
-          <img 
-            src="src/assets/images/booking_setter_logo_1784639936453.jpg" 
-            alt="Book App Logo" 
+          <img
+            src="src/assets/images/logo.jpg"
+            alt="Book App Logo"
             className="h-20 w-20 rounded-3xl object-cover shadow-xl shadow-indigo-150/10 border border-slate-200/40 animate-pulse"
             referrerPolicy="no-referrer"
           />
@@ -1638,7 +1638,7 @@ export default function App() {
 
   if (!user && !isBypassed) {
     return (
-      <Login 
+      <Login
         onLoginSuccess={(loggedInUser) => {
           setUser(loggedInUser);
         }}
@@ -1652,16 +1652,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9] flex flex-col md:flex-row font-sans" id="applet-main-container">
-      
+
       {/* DESKTOP SIDEBAR NAVIGATION */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/50 p-5 shrink-0 justify-between">
-        
+
         <div className="space-y-6">
           {/* Main App Logo Header */}
           <div className="flex items-center gap-3 px-1.5 py-1">
-            <img 
-              src="src/assets/images/booking_setter_logo_1784639936453.jpg" 
-              alt="Book App Logo" 
+            <img
+              src="src/assets/images/logo.jpg"
+              alt="Book App Logo"
               className="h-10 w-10 rounded-xl object-cover shadow-sm border border-slate-200/40"
               referrerPolicy="no-referrer"
             />
@@ -1710,11 +1710,10 @@ export default function App() {
                       handleSwitchBusiness(b.id);
                       setIsBizDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs transition-all text-left cursor-pointer ${
-                      b.id === activeBusinessId 
-                        ? 'bg-indigo-50/60 text-indigo-900 font-bold border border-indigo-100/30' 
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-                    }`}
+                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs transition-all text-left cursor-pointer ${b.id === activeBusinessId
+                      ? 'bg-indigo-50/60 text-indigo-900 font-bold border border-indigo-100/30'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                      }`}
                   >
                     <div className="min-w-0">
                       <p className="font-extrabold truncate max-w-[150px]">{b.name}</p>
@@ -1769,27 +1768,24 @@ export default function App() {
                   key={item.id}
                   id={`sidebar-nav-${item.id}`}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer relative ${
-                    isSelected 
-                      ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 font-semibold' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer relative ${isSelected
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
                 >
                   <Icon className={`h-4.5 w-4.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
-                  
+
                   {/* Overdue/Today indicator Badges */}
                   {hasCalendarBadge && (
-                    <span className={`ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full transition-all shrink-0 ${
-                      isSelected ? 'bg-indigo-500 text-white' : 'bg-indigo-50 text-indigo-600 border border-indigo-100/50'
-                    }`}>
+                    <span className={`ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full transition-all shrink-0 ${isSelected ? 'bg-indigo-500 text-white' : 'bg-indigo-50 text-indigo-600 border border-indigo-100/50'
+                      }`}>
                       {todayUpcomingBookingsCount}
                     </span>
                   )}
                   {hasPaymentsBadge && (
-                    <span className={`ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full transition-all shrink-0 ${
-                      isSelected ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600 border border-rose-100/50'
-                    }`}>
+                    <span className={`ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full transition-all shrink-0 ${isSelected ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600 border border-rose-100/50'
+                      }`}>
                       {overduePaymentsCount}
                     </span>
                   )}
@@ -1825,11 +1821,10 @@ export default function App() {
                 type="button"
                 disabled={isSyncing}
                 onClick={handleSyncWithSupabase}
-                className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[10px] font-extrabold tracking-wide uppercase transition-all shadow-xs cursor-pointer ${
-                  syncSuccess
-                    ? 'bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-500 hover:scale-[1.01]'
-                }`}
+                className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[10px] font-extrabold tracking-wide uppercase transition-all shadow-xs cursor-pointer ${syncSuccess
+                  ? 'bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-500 hover:scale-[1.01]'
+                  }`}
               >
                 {isSyncing ? (
                   <>
@@ -1973,11 +1968,10 @@ export default function App() {
                     handleSwitchBusiness(b.id);
                     setIsMobileBizDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-all text-left cursor-pointer ${
-                    b.id === activeBusinessId 
-                      ? 'bg-indigo-50/60 text-indigo-900 font-bold border border-indigo-100/30' 
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-all text-left cursor-pointer ${b.id === activeBusinessId
+                    ? 'bg-indigo-50/60 text-indigo-900 font-bold border border-indigo-100/30'
+                    : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
                   <div className="min-w-0">
                     <p className="font-bold truncate max-w-[140px]">{b.name}</p>
@@ -2043,11 +2037,10 @@ export default function App() {
           <button
             type="button"
             onClick={user ? handleSyncWithSupabase : () => setIsSaveModalOpen(true)}
-            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
-              syncSuccess
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100'
-            }`}
+            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${syncSuccess
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100'
+              }`}
             title="Save all data to Database"
             disabled={isSyncing}
           >
@@ -2113,30 +2106,26 @@ export default function App() {
               onClick={() => setActiveTab(item.id)}
               className="flex flex-col items-center justify-center space-y-0.5 cursor-pointer"
             >
-              <div className={`p-1.5 rounded-xl transition-all relative ${
-                isSelected ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400'
-              }`}>
+              <div className={`p-1.5 rounded-xl transition-all relative ${isSelected ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400'
+                }`}>
                 <Icon className="h-4 w-4" />
 
                 {/* Mobile Notification Badges */}
                 {hasCalendarBadge && (
-                  <span className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ring-2 ring-white animate-pulse ${
-                    isSelected ? 'bg-pink-500 text-white' : 'bg-indigo-600 text-white'
-                  }`}>
+                  <span className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ring-2 ring-white animate-pulse ${isSelected ? 'bg-pink-500 text-white' : 'bg-indigo-600 text-white'
+                    }`}>
                     {todayUpcomingBookingsCount}
                   </span>
                 )}
                 {hasPaymentsBadge && (
-                  <span className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ring-2 ring-white animate-pulse ${
-                    isSelected ? 'bg-amber-500 text-slate-950' : 'bg-rose-600 text-white'
-                  }`}>
+                  <span className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ring-2 ring-white animate-pulse ${isSelected ? 'bg-amber-500 text-slate-950' : 'bg-rose-600 text-white'
+                    }`}>
                     {overduePaymentsCount}
                   </span>
                 )}
               </div>
-              <span className={`text-[9px] font-bold ${
-                isSelected ? 'text-indigo-600 font-extrabold' : 'text-slate-400'
-              }`}>
+              <span className={`text-[9px] font-bold ${isSelected ? 'text-indigo-600 font-extrabold' : 'text-slate-400'
+                }`}>
                 {item.label}
               </span>
             </button>
@@ -2157,7 +2146,7 @@ export default function App() {
             >
               {/* Background gradient border */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-indigo-500 to-violet-600" />
-              
+
               <button
                 type="button"
                 onClick={() => setIsSaveModalOpen(false)}
@@ -2176,7 +2165,7 @@ export default function App() {
                     Save to Cloud Database
                   </h3>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    You are currently running in <span className="font-bold text-amber-700 bg-amber-50/50 px-1.5 py-0.5 rounded border border-amber-100/50">Local Sandbox Mode</span>. 
+                    You are currently running in <span className="font-bold text-amber-700 bg-amber-50/50 px-1.5 py-0.5 rounded border border-amber-100/50">Local Sandbox Mode</span>.
                     Your bookings, clients, packages, and payments are stored in this browser session only and could be lost if you clear your browser cache.
                   </p>
                 </div>
