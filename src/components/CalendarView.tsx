@@ -1137,7 +1137,7 @@ export default function CalendarView({
                   required
                 >
                   {services.map(s => (
-                    <option key={s.name} value={s.name}>{s.name} — ₹{s.price} ({s.durationMinutes} min)</option>
+                    <option key={s.name} value={s.name}>{s.name} — {formatCurrency(s.price, business.currency || 'AED')} ({s.durationMinutes} min)</option>
                   ))}
                 </select>
               </div>
@@ -1558,7 +1558,7 @@ export default function CalendarView({
                         {resolvedUpi}
                       </span>
                       <span className="text-[8px] text-slate-400 font-semibold mt-0.5">
-                        Amount: ₹{receiptBooking.price}
+                        Amount: {formatCurrency(receiptBooking.price, business.currency || 'AED')}
                       </span>
                     </div>
                   );
@@ -1730,7 +1730,7 @@ export default function CalendarView({
                   {resolvedUpi}
                 </span>
                 <span className="text-[8px] mt-0.5 font-bold">
-                  Amount: ₹{receiptBooking.price}
+                  Amount: {formatCurrency(receiptBooking.price, business.currency || 'AED')}
                 </span>
               </div>
             );

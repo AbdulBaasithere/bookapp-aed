@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Payment, Client, Booking, Business } from '../types';
+import { formatCurrency } from '../utils/countryUtils';
 import { 
   Search, 
   Receipt, 
@@ -135,7 +136,7 @@ export default function PaymentsLedger({
       `👤 *Client:* ${p.clientName}\n` +
       `📅 *Date:* ${formattedDate}\n` +
       `📝 *Details:* ${description}\n` +
-      `💵 *Amount:* ₹${p.amount}\n` +
+      `💵 *Amount:* ${formatCurrency(p.amount, business.currency || 'AED')}\n` +
       `📌 *Status:* ${statusIcon} ${paymentMode}\n\n` +
       `Thank you for your business! - ${business.name}`;
 
@@ -180,14 +181,14 @@ export default function PaymentsLedger({
         {/* Stat 1 */}
         <div className="premium-card p-5">
           <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Cash Flow (Collected)</span>
-          <p className="text-xl font-extrabold text-emerald-600 mt-1">₹{totalReceived.toLocaleString('en-IN')}</p>
+          <p className="text-xl font-extrabold text-emerald-600 mt-1">{formatCurrency(totalReceived, business.currency || 'AED')}</p>
           <span className="text-[9px] text-slate-400 block mt-1">Recorded upfront & settled bookings</span>
         </div>
 
         {/* Stat 2 */}
         <div className="premium-card p-5">
           <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Dues Pending</span>
-          <p className="text-xl font-extrabold text-red-500 mt-1">₹{totalDues.toLocaleString('en-IN')}</p>
+          <p className="text-xl font-extrabold text-red-500 mt-1">{formatCurrency(totalDues, business.currency || 'AED')}</p>
           <span className="text-[9px] text-slate-400 block mt-1">Outstanding appointments</span>
         </div>
 
@@ -196,7 +197,7 @@ export default function PaymentsLedger({
           <div className="flex justify-between items-start">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase block">UPI Collections</span>
-              <p className="text-base font-bold text-slate-900 mt-1">₹{upiCollected.toLocaleString('en-IN')}</p>
+              <p className="text-base font-bold text-slate-900 mt-1">{formatCurrency(upiCollected, business.currency || 'AED')}</p>
             </div>
             <span className="text-[9px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 font-bold rounded">
               {totalReceived > 0 ? Math.round((upiCollected / totalReceived) * 100) : 0}% UPI
@@ -297,7 +298,7 @@ export default function PaymentsLedger({
                   </div>
                   
                   <div className="text-right font-bold text-slate-900">
-                    ₹{p.amount.toLocaleString('en-IN')}
+                    {formatCurrency(p.amount, business.currency || 'AED')}
                   </div>
 
                   <div className="text-center">
@@ -377,11 +378,11 @@ export default function PaymentsLedger({
                       <div className="leading-relaxed text-slate-700">
                         {feedItem.type === 'upi_payment_received' ? (
                           <span>
-                            Amount of <strong className="text-indigo-900">₹{feedItem.amount}</strong> confirmed paid by <strong className="text-indigo-900">{feedItem.clientName}</strong> via UPI QR code interaction.
+                            Amount of <strong className="text-indigo-900">{formatCurrency(feedItem.amount, business.currency || 'AED')}</strong> confirmed paid by <strong className="text-indigo-900">{feedItem.clientName}</strong> via UPI QR code interaction.
                           </span>
                         ) : (
                           <span>
-                            Payment of <strong className="text-slate-800">₹{feedItem.amount}</strong> cleared for <strong>{feedItem.clientName}</strong>.
+                            Payment of <strong className="text-slate-800">{formatCurrency(feedItem.amount, business.currency || 'AED')}</strong> cleared for <strong>{feedItem.clientName}</strong>.
                           </span>
                         )}
                       </div>
@@ -456,7 +457,7 @@ export default function PaymentsLedger({
 
                 <div className="flex items-center justify-between font-extrabold text-slate-900 py-1">
                   <span className="text-xs">TOTAL RECEIVED</span>
-                  <span className="text-lg">₹{selectedReceipt.amount}</span>
+                  <span className="text-lg">{formatCurrency(selectedReceipt.amount, business.currency || 'AED')}</span>
                 </div>
 
                 <div className="flex justify-center gap-2 pt-1">
@@ -487,7 +488,7 @@ export default function PaymentsLedger({
                       </div>
                       <div className="text-[10px] text-slate-500 leading-tight">
                         <p className="font-semibold text-slate-700">UPI Payee ID: <span className="font-mono text-indigo-600">{selectedReceipt.clientPhone}@upi</span></p>
-                        <p className="mt-0.5">Outstanding Amount: <strong className="text-slate-800">₹{selectedReceipt.amount}</strong></p>
+                        <p className="mt-0.5">Outstanding Amount: <strong className="text-slate-800">{formatCurrency(selectedReceipt.amount, business.currency || 'AED')}</strong></p>
                       </div>
 
                       {/* UPI QR Interaction Confirmation */}
@@ -597,7 +598,7 @@ export default function PaymentsLedger({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">Amount Collected (₹)</label>
+                <label className="text-xs font-semibold text-slate-500">Amount Collected ({business.currency || 'AED'})</label>
                 <input 
                   type="number"
                   placeholder="e.g. 1500"

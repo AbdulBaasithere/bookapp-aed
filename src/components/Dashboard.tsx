@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Booking, Payment, Package, Staff, Client, Business } from '../types';
+import { formatCurrency } from '../utils/countryUtils';
 import { 
   TrendingUp, 
   Calendar, 
@@ -290,10 +291,10 @@ export default function Dashboard({
             </div>
           </div>
           <div>
-            <h3 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight font-display">₹{monthlyRevenue.toLocaleString('en-IN')}</h3>
+            <h3 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight font-display">{formatCurrency(monthlyRevenue, business.currency || 'AED')}</h3>
             <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1">
               <span className="inline-block w-1 h-1 rounded-full bg-emerald-400"></span>
-              ₹{weeklyRevenue.toLocaleString('en-IN')} this week
+              {formatCurrency(weeklyRevenue, business.currency || 'AED')} this week
             </p>
           </div>
         </motion.div>
@@ -362,7 +363,7 @@ export default function Dashboard({
             </div>
           </div>
           <div>
-            <h3 className="text-xl md:text-2xl font-extrabold text-rose-600 tracking-tight font-display">₹{totalDues.toLocaleString('en-IN')}</h3>
+            <h3 className="text-xl md:text-2xl font-extrabold text-rose-600 tracking-tight font-display">{formatCurrency(totalDues, business.currency || 'AED')}</h3>
             <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1">
               <span className="inline-block w-1 h-1 rounded-full bg-rose-400"></span>
               Pending payments
@@ -474,7 +475,7 @@ export default function Dashboard({
 
                       {/* Immediate Status Actions for One-Handed mobile use */}
                       <div className="flex flex-col items-end justify-between h-full space-y-2">
-                        <span className="text-xs font-bold text-slate-900">₹{b.price}</span>
+                        <span className="text-xs font-bold text-slate-900">{formatCurrency(b.price, business.currency || 'AED')}</span>
                         
                         {b.status === 'confirmed' ? (
                           <div className="flex items-center gap-1">
@@ -586,7 +587,7 @@ export default function Dashboard({
                       </div>
                       <div className="text-right shrink-0">
                         <span className="font-extrabold text-slate-900 block text-xs">
-                          ₹{feedItem.amount}
+                          {formatCurrency(feedItem.amount, business.currency || 'AED')}
                         </span>
                       </div>
                     </div>
@@ -611,7 +612,7 @@ export default function Dashboard({
                     <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
                     UPI / QR Code
                   </span>
-                  <span>₹{upiTotal.toLocaleString('en-IN')}</span>
+                  <span>{formatCurrency(upiTotal, business.currency || 'AED')}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div 
@@ -628,7 +629,7 @@ export default function Dashboard({
                     <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                     Cash
                   </span>
-                  <span>₹{cashTotal.toLocaleString('en-IN')}</span>
+                  <span>{formatCurrency(cashTotal, business.currency || 'AED')}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div 
@@ -645,7 +646,7 @@ export default function Dashboard({
                     <span className="h-2 w-2 rounded-full bg-amber-500"></span>
                     Card Terminal
                   </span>
-                  <span>₹{cardTotal.toLocaleString('en-IN')}</span>
+                  <span>{formatCurrency(cardTotal, business.currency || 'AED')}</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div 
@@ -657,7 +658,7 @@ export default function Dashboard({
 
               <div className="pt-2 border-t border-slate-100 flex justify-between text-xs font-semibold text-slate-900">
                 <span>Total Collected</span>
-                <span>₹{monthlyRevenue.toLocaleString('en-IN')}</span>
+                <span>{formatCurrency(monthlyRevenue, business.currency || 'AED')}</span>
               </div>
             </div>
           </div>

@@ -428,12 +428,12 @@ export default function ClientProfiles({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Total Spent</span>
-                    <p className="text-sm font-bold text-slate-900 mt-1">₹{stats.totalSpent.toLocaleString('en-IN')}</p>
+                    <p className="text-sm font-bold text-slate-900 mt-1">{formatCurrency(stats.totalSpent, business.currency || 'AED')}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Outstanding Dues</span>
                     <p className={`text-sm font-bold mt-1 ${stats.totalDues > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-                      ₹{stats.totalDues}
+                      {formatCurrency(stats.totalDues, business.currency || 'AED')}
                     </p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
@@ -541,7 +541,7 @@ export default function ClientProfiles({
                           </div>
                           <div className="text-right">
                             <span className="font-bold text-slate-900 block">
-                              {h.linkedPackageId ? 'Package Session' : `₹${h.price}`}
+                              {h.linkedPackageId ? 'Package Session' : formatCurrency(h.price, business.currency || 'AED')}
                             </span>
                             <span className={`inline-block text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
                               h.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
@@ -761,12 +761,12 @@ export default function ClientProfiles({
               <div className="space-y-1 bg-rose-50/50 border border-rose-100 p-2.5 rounded-xl text-xs">
                 <span className="font-semibold text-slate-500 block">Total Due:</span>
                 <span className="text-lg font-bold text-rose-600 block">
-                  ₹{getClientStats(selectedClient.phone).totalDues}
+                  {formatCurrency(getClientStats(selectedClient.phone).totalDues, business.currency || 'AED')}
                 </span>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">Settle Amount (₹)</label>
+                <label className="text-xs font-semibold text-slate-500">Settle Amount ({business.currency || 'AED'})</label>
                 <input 
                   type="number"
                   value={settleAmount}

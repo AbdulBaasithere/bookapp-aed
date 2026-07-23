@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Business, Staff, BusinessType, Service, getBusinessEmoji } from '../types';
 import SupabaseDiagnostic from './SupabaseDiagnostic';
+import { SUPPORTED_CURRENCIES, formatCurrency } from '../utils/countryUtils';
 import { 
   Building, 
   Users, 
@@ -190,6 +191,7 @@ export default function SettingsConfig({
   const [bType, setBType] = useState<BusinessType>(business.type);
   const [bOwner, setBOwner] = useState(business.ownerName);
   const [bPhone, setBPhone] = useState(business.phone);
+  const [bCurrency, setBCurrency] = useState(business.currency || 'AED');
   const [bUpi, setBUpi] = useState(business.upiId || '');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
@@ -200,6 +202,7 @@ export default function SettingsConfig({
     setBType(business.type);
     setBOwner(business.ownerName);
     setBPhone(business.phone);
+    setBCurrency(business.currency || 'AED');
     setBUpi(business.upiId || '');
   }, [business]);
 
@@ -327,11 +330,12 @@ export default function SettingsConfig({
   const handleUpdateBusinessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateBusiness({
-      id: business.id,
+      ...business,
       name: bName,
       type: bType,
       ownerName: bOwner,
       phone: bPhone,
+      currency: bCurrency,
       upiId: bUpi
     });
     setSaveSuccess(true);
@@ -627,15 +631,30 @@ export default function SettingsConfig({
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Business Contact (Mobile)</label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">+91</span>
+                <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">+971</span>
                 <input 
                   type="tel"
                   value={bPhone}
                   onChange={(e) => setBPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full pl-11 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-indigo-500"
+                  className="w-full pl-12 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-indigo-500"
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500">Pricing & Billing Currency</label>
+              <select
+                value={bCurrency}
+                onChange={(e) => setBCurrency(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-indigo-500"
+              >
+                {SUPPORTED_CURRENCIES.map(c => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1">
@@ -866,10 +885,10 @@ export default function SettingsConfig({
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-500">Price (INR ₹)</label>
+                <label className="font-semibold text-slate-500">Price ({bCurrency || 'AED'})</label>
                 <input 
                   type="number"
-                  placeholder="e.g. 500"
+                  placeholder="e.g. 150"
                   min="0"
                   value={servPrice}
                   onChange={(e) => setServPrice(e.target.value)}
@@ -939,7 +958,7 @@ export default function SettingsConfig({
                       </p>
                     </div>
                     <div className="text-xs font-extrabold text-slate-900 bg-white border border-slate-200/50 px-2 py-1 rounded-xl shadow-2xs shrink-0">
-                      ₹{s.price}
+                      {formatCurrency(s.price, bCurrency || 'AED')}
                     </div>
                   </div>
 
