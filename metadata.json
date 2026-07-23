@@ -1,0 +1,6 @@
+{
+  "name": "Book App",
+  "description": "A lightweight booking, client, and payment management web app for salons, spas, clinics, and gyms. Features a staff-based calendar, booking conflict detection, client history, membership tracking, payments log, and WhatsApp receipts and reminders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
