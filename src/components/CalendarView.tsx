@@ -17,7 +17,12 @@ import {
   MessageSquare,
   XCircle,
   Printer,
-  Bell
+  Bell,
+  QrCode,
+  Copy,
+  Receipt,
+  Check,
+  FileText
 } from 'lucide-react';
 
 interface CalendarViewProps {
@@ -70,6 +75,8 @@ export default function CalendarView({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState<Booking | null>(null);
+  const [billBooking, setBillBooking] = useState<Booking | null>(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
   const [isTomorrowPanelOpen, setIsTomorrowPanelOpen] = useState(true);
 
   // New booking form states
@@ -366,7 +373,7 @@ export default function CalendarView({
     setIsNewBookingOpen(true);
   };
 
-  const handleSaveBooking = (e: React.FormEvent) => {
+  const handleSaveBooking = (e: React.FormEvent, generateBillImmediately = false) => {
     e.preventDefault();
     if (!formClientPhone || !formClientName || !formStaffId || !formServiceName || !formTime) {
       showToast('Please fill out all required fields.', 'error');
@@ -387,8 +394,9 @@ export default function CalendarView({
 
     const proceedWithSave = () => {
       const servicePrice = services.find(s => s.name === formServiceName)?.price || 0;
-
-      onAddBooking({
+      const freshBookingId = `booking-${Date.now()}`;
+      const freshBooking: Booking = {
+        id: freshBookingId,
         clientPhone: formClientPhone,
         clientName: formClientName,
         staffId: formStaffId,
@@ -398,12 +406,30 @@ export default function CalendarView({
         status: 'confirmed',
         notes: formNotes,
         linkedPackageId: formUsePackageId || undefined,
-        price: formUsePackageId ? 0 : servicePrice
+        price: formUsePackageId ? 0 : servicePrice,
+        businessId: business.id
+      };
+
+      onAddBooking({
+        clientPhone: freshBooking.clientPhone,
+        clientName: freshBooking.clientName,
+        staffId: freshBooking.staffId,
+        serviceName: freshBooking.serviceName,
+        dateTime: freshBooking.dateTime,
+        durationMinutes: freshBooking.durationMinutes,
+        status: freshBooking.status,
+        notes: freshBooking.notes,
+        linkedPackageId: freshBooking.linkedPackageId,
+        price: freshBooking.price
       });
 
       setIsNewBookingOpen(false);
       setConflictOverlay(null);
       showToast('Appointment booked successfully!', 'success');
+
+      if (generateBillImmediately) {
+        setBillBooking(freshBooking);
+      }
     };
 
     if (conflictRes.hasConflict) {
@@ -1207,12 +1233,20 @@ export default function CalendarView({
                 </div>
               )}
 
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col gap-2">
                 <button
                   type="submit"
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   Save Appointment Slot
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleSaveBooking(e as unknown as React.FormEvent, true)}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Receipt className="h-4 w-4" />
+                  Save & Generate Bill
                 </button>
               </div>
             </form>
@@ -1349,6 +1383,17 @@ export default function CalendarView({
                     <span>Print Thermal Receipt</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => {
+                    setBillBooking(selectedBooking);
+                    setSelectedBooking(null);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-xs cursor-pointer transition-colors"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>🧾 Generate & View Bill</span>
+                </button>
 
                 {!isConfirmingDelete ? (
                   <button
@@ -1824,6 +1869,270 @@ export default function CalendarView({
           </div>
         </div>
       )}
+
+      {/* ─────── BILL / INVOICE GENERATOR MODAL ─────── */}
+      {billBooking && (() => {
+        const invoiceNo = `INV-${billBooking.id.slice(-6).toUpperCase()}`;
+        const billDate = new Date(billBooking.dateTime);
+        const dateStr = billDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = billDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const stylistName = staff.find(s => s.id === billBooking.staffId)?.name || 'Staff';
+        const serviceObj = services.find(s => s.name === billBooking.serviceName);
+        const unitPrice = billBooking.price ?? serviceObj?.price ?? 0;
+        const isPrepaid = !!billBooking.linkedPackageId;
+        const subtotal = isPrepaid ? 0 : unitPrice;
+        const vatResult = calculateUaeVat(subtotal);
+        const vatAmount = vatResult.vatAmount;
+        const vatRate = 5;
+        const grandTotal = isPrepaid ? 0 : vatResult.total;
+        const currCode = business.currency || 'AED';
+        const ownerUpi = (business as any).upiId || 'owner@upi';
+        const upiPayload = `upi://pay?pa=${ownerUpi}&pn=${encodeURIComponent(business.name)}&am=${grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Payment for ${invoiceNo}`)}`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(upiPayload)}`;
+
+        const handleCopyUpi = () => {
+          navigator.clipboard.writeText(ownerUpi);
+          setCopiedUpi(true);
+          setTimeout(() => setCopiedUpi(false), 2000);
+        };
+
+        const handlePrintBill = () => {
+          const printEl = document.getElementById('bill-printable-area');
+          if (!printEl) return;
+          const printWin = window.open('', '_blank', 'width=420,height=700');
+          if (!printWin) return;
+          printWin.document.write(`
+            <html><head><title>Invoice ${invoiceNo}</title>
+            <style>
+              * { margin:0; padding:0; box-sizing:border-box; }
+              body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; padding:24px; color:#1e293b; font-size:13px; }
+              table { width:100%; border-collapse:collapse; margin:12px 0; }
+              th, td { text-align:left; padding:8px 6px; border-bottom:1px solid #e2e8f0; }
+              th { background:#f8fafc; font-size:11px; text-transform:uppercase; color:#64748b; }
+              .right { text-align:right; }
+              .header { text-align:center; margin-bottom:16px; border-bottom:2px solid #4f46e5; padding-bottom:12px; }
+              .header h1 { font-size:18px; color:#4f46e5; }
+              .total-row td { font-weight:700; border-top:2px solid #1e293b; }
+              .qr-section { text-align:center; margin-top:20px; }
+              .footer { text-align:center; margin-top:24px; font-size:11px; color:#94a3b8; }
+              @media print { body { padding:12px; } }
+            </style></head><body>
+            ${printEl.innerHTML}
+            </body></html>
+          `);
+          printWin.document.close();
+          printWin.focus();
+          setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+        };
+
+        const handleWhatsAppBill = () => {
+          const text = `*INVOICE FROM ${business.name.toUpperCase()}* 🧾\n\n` +
+            `*Invoice No:* ${invoiceNo}\n` +
+            `*Date:* ${dateStr} at ${timeStr}\n\n` +
+            `*Client:* ${billBooking.clientName}\n` +
+            `*Phone:* ${formatDisplayPhone(billBooking.clientPhone)}\n` +
+            `*Specialist:* ${stylistName}\n\n` +
+            `━━━━━━━━━━━━━━━━\n` +
+            `*Service:* ${billBooking.serviceName}\n` +
+            `*Duration:* ${billBooking.durationMinutes} min\n` +
+            `*Price:* ${isPrepaid ? 'Prepaid (Package)' : formatCurrency(unitPrice, currCode)}\n` +
+            `━━━━━━━━━━━━━━━━\n\n` +
+            (isPrepaid ? `*Total:* Prepaid via Package ✅\n` : (
+              `*Subtotal:* ${formatCurrency(subtotal, currCode)}\n` +
+              `*VAT (${vatRate}%):* ${formatCurrency(vatAmount, currCode)}\n` +
+              `*Grand Total:* ${formatCurrency(grandTotal, currCode)}\n`
+            )) +
+            `\n💳 *Pay via UPI:* ${ownerUpi}\n` +
+            `\nThank you for choosing ${business.name}! ✨`;
+          const whatsappUrl = buildWhatsAppLink(billBooking.clientPhone, text);
+          window.open(whatsappUrl, '_blank');
+        };
+
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setBillBooking(null)}>
+            <div
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-t-3xl px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-xl">
+                    <FileText className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-white text-sm font-bold tracking-wide">Invoice / Bill</h2>
+                    <p className="text-indigo-200 text-[11px] font-medium">{invoiceNo}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setBillBooking(null)}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 cursor-pointer transition-colors"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Printable Bill Content */}
+              <div id="bill-printable-area">
+                {/* Business Header */}
+                <div className="px-6 pt-5 pb-3 text-center border-b border-slate-100">
+                  <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">{business.name}</h3>
+                  {(business as any).address && <p className="text-[11px] text-slate-500 mt-0.5">{(business as any).address}</p>}
+                  {business.phone && <p className="text-[11px] text-slate-500">📞 {formatDisplayPhone(business.phone)}</p>}
+                  <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-[11px] font-bold px-3 py-1 rounded-full">
+                    <FileText className="h-3 w-3" />
+                    {invoiceNo}
+                  </div>
+                </div>
+
+                {/* Invoice Meta */}
+                <div className="px-6 py-3 grid grid-cols-2 gap-3 text-xs bg-slate-50/50">
+                  <div>
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Date</span>
+                    <span className="font-semibold text-slate-800">{dateStr}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Time</span>
+                    <span className="font-semibold text-slate-800">{timeStr}</span>
+                  </div>
+                </div>
+
+                {/* Client & Specialist */}
+                <div className="px-6 py-3 grid grid-cols-2 gap-3 text-xs border-b border-slate-100">
+                  <div>
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Billed To</span>
+                    <span className="font-bold text-slate-900">{billBooking.clientName}</span>
+                    <span className="block text-slate-500 text-[11px]">{formatDisplayPhone(billBooking.clientPhone)}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Specialist</span>
+                    <span className="font-bold text-slate-900">{stylistName}</span>
+                  </div>
+                </div>
+
+                {/* Service Itemized Table */}
+                <div className="px-6 py-3">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b-2 border-slate-200">
+                        <th className="py-2 text-left text-[10px] uppercase font-bold text-slate-400 tracking-wider">Service</th>
+                        <th className="py-2 text-center text-[10px] uppercase font-bold text-slate-400 tracking-wider">Duration</th>
+                        <th className="py-2 text-right text-[10px] uppercase font-bold text-slate-400 tracking-wider">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-slate-100">
+                        <td className="py-2.5 font-semibold text-slate-800">{billBooking.serviceName}</td>
+                        <td className="py-2.5 text-center text-slate-600">{billBooking.durationMinutes} min</td>
+                        <td className="py-2.5 text-right font-semibold text-slate-800">
+                          {isPrepaid ? 'Prepaid' : formatCurrency(unitPrice, currCode)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Totals */}
+                <div className="px-6 pb-3">
+                  <div className="bg-slate-50 rounded-xl p-3 space-y-1.5">
+                    {!isPrepaid ? (
+                      <>
+                        <div className="flex justify-between text-xs text-slate-600">
+                          <span>Subtotal</span>
+                          <span className="font-semibold">{formatCurrency(subtotal, currCode)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-600">
+                          <span>VAT ({vatRate}%)</span>
+                          <span className="font-semibold">{formatCurrency(vatAmount, currCode)}</span>
+                        </div>
+                        <div className="border-t border-slate-200 pt-1.5 flex justify-between text-sm font-extrabold text-slate-900">
+                          <span>Grand Total</span>
+                          <span className="text-indigo-700">{formatCurrency(grandTotal, currCode)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between text-sm font-extrabold text-emerald-700">
+                        <span>Total</span>
+                        <span>Prepaid via Package ✅</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* UPI QR Code Section */}
+                {!isPrepaid && grandTotal > 0 && (
+                  <div className="px-6 pb-4">
+                    <div className="bg-gradient-to-br from-slate-50 to-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5 mb-3">
+                        <QrCode className="h-4 w-4 text-indigo-600" />
+                        <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Scan & Pay</span>
+                      </div>
+                      <div className="inline-block p-2 bg-white rounded-xl shadow-sm border border-slate-200">
+                        <img
+                          src={qrUrl}
+                          alt="UPI Payment QR"
+                          className="w-[180px] h-[180px]"
+                          loading="eager"
+                        />
+                      </div>
+                      <p className="mt-2.5 text-[11px] text-slate-500 font-medium">
+                        Pay <span className="font-bold text-indigo-700">{formatCurrency(grandTotal, currCode)}</span> via GPay / PhonePe / Paytm
+                      </p>
+                      <div className="mt-2 flex items-center justify-center gap-2">
+                        <span className="text-[11px] font-mono bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700">{ownerUpi}</span>
+                        <button
+                          onClick={handleCopyUpi}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg cursor-pointer transition-colors"
+                        >
+                          {copiedUpi ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          {copiedUpi ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thank You Footer */}
+                <div className="px-6 pb-3 text-center">
+                  <p className="text-[11px] text-slate-400 font-medium">Thank you for choosing <span className="font-bold text-slate-600">{business.name}</span> ✨</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="sticky bottom-0 bg-white border-t border-slate-100 px-5 py-3 grid grid-cols-2 gap-2 rounded-b-3xl">
+                <button
+                  onClick={handlePrintBill}
+                  className="inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold py-2.5 rounded-xl cursor-pointer transition-colors"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Print / PDF
+                </button>
+                <button
+                  onClick={handleWhatsAppBill}
+                  className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2.5 rounded-xl cursor-pointer transition-colors"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => {
+                    if (billBooking.status !== 'completed') {
+                      onUpdateBookingStatus(billBooking.id, 'completed');
+                    }
+                    setBillBooking(null);
+                    showToast('Payment confirmed & appointment completed!', 'success');
+                  }}
+                  className="col-span-2 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Confirm Payment & Complete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

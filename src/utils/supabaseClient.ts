@@ -216,13 +216,31 @@ export async function syncDirectWithSupabase(client: SupabaseClient, payload: an
         created_at: b.created_at || new Date().toISOString()
       }));
       let { error: bizErr } = await client.from('businesses').upsert(dbBusinesses);
-      if (bizErr && (bizErr.message?.includes('businesses_type_check') || bizErr.code === '23514')) {
-        const safeDbBusinesses = dbBusinesses.map((b: any) => {
-          const allowed = ['salon', 'spa', 'clinic', 'gym'];
-          const lowerType = (b.type || '').toLowerCase();
-          return { ...b, type: allowed.includes(lowerType) ? lowerType : 'salon' };
-        });
-        await client.from('businesses').upsert(safeDbBusinesses);
+      if (bizErr) {
+        if (bizErr.message?.includes('businesses_type_check') || bizErr.code === '23514') {
+          const safeDbBusinesses = dbBusinesses.map((b: any) => {
+            const allowed = ['salon', 'spa', 'clinic', 'gym'];
+            const lowerType = (b.type || '').toLowerCase();
+            return { ...b, type: allowed.includes(lowerType) ? lowerType : 'salon' };
+          });
+          const { error: retryErr } = await client.from('businesses').upsert(safeDbBusinesses);
+          if (retryErr) bizErr = retryErr;
+          else bizErr = null;
+        }
+
+        if (bizErr) {
+          const missingMatch = bizErr.message?.match(/Could not find the '([^']+)' column/i);
+          if (missingMatch && missingMatch[1]) {
+            const colName = missingMatch[1];
+            console.warn(`[Direct Sync] Retrying businesses upsert without missing column '${colName}'...`);
+            const strippedDbBusinesses = dbBusinesses.map((b: any) => {
+              const copy = { ...b };
+              delete copy[colName];
+              return copy;
+            });
+            await client.from('businesses').upsert(strippedDbBusinesses);
+          }
+        }
       }
     }
 

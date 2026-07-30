@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Business, Staff, BusinessType, Service, getBusinessEmoji } from '../types';
 import SupabaseDiagnostic from './SupabaseDiagnostic';
-import { SUPPORTED_CURRENCIES, formatCurrency } from '../utils/countryUtils';
+import { SUPPORTED_CURRENCIES, formatCurrency, getPhoneCodeForCurrency } from '../utils/countryUtils';
 import { 
   Building, 
   Users, 
@@ -212,6 +212,7 @@ export default function SettingsConfig({
   const [newBizType, setNewBizType] = useState<BusinessType>('salon');
   const [newBizOwner, setNewBizOwner] = useState('');
   const [newBizPhone, setNewBizPhone] = useState('');
+  const [newBizCurrency, setNewBizCurrency] = useState('AED');
 
   const handleAddBusinessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,6 +225,8 @@ export default function SettingsConfig({
       type: newBizType,
       ownerName: newBizOwner,
       phone: newBizPhone,
+      currency: newBizCurrency,
+      phoneCountryCode: getPhoneCodeForCurrency(newBizCurrency),
       upiId: ''
     });
     // Reset form
@@ -231,6 +234,7 @@ export default function SettingsConfig({
     setNewBizType('salon');
     setNewBizOwner('');
     setNewBizPhone('');
+    setNewBizCurrency('AED');
     setIsAddingBusiness(false);
   };
 
@@ -336,6 +340,7 @@ export default function SettingsConfig({
       ownerName: bOwner,
       phone: bPhone,
       currency: bCurrency,
+      phoneCountryCode: getPhoneCodeForCurrency(bCurrency),
       upiId: bUpi
     });
     setSaveSuccess(true);
@@ -503,6 +508,21 @@ export default function SettingsConfig({
                   required
                 />
               </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <label className="font-semibold text-slate-500">Pricing & Billing Currency</label>
+                <select
+                  value={newBizCurrency}
+                  onChange={(e) => setNewBizCurrency(e.target.value)}
+                  className="w-full bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold text-slate-800 focus:outline-indigo-500"
+                >
+                  {SUPPORTED_CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <button
@@ -655,6 +675,9 @@ export default function SettingsConfig({
                   </option>
                 ))}
               </select>
+              <p className="text-[10px] text-slate-400 font-medium">
+                ✨ Changing this updates currency formatting across Dashboard, Calendar, Payments, Packages, Client Profiles, & Receipts, and syncs directly to the database.
+              </p>
             </div>
 
             <div className="space-y-1">

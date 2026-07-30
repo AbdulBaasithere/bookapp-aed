@@ -198,24 +198,41 @@ async function startServer() {
               };
             });
             let { error: bizErr } = await supabase.from('businesses').upsert(dbBusinesses);
-            if (bizErr && (
-              bizErr.message?.includes('businesses_type_check') || 
-              bizErr.message?.includes('check constraint') || 
-              bizErr.code === '23514'
-            )) {
-              console.warn('Businesses upsert hit legacy type constraint. Retrying with safe fallback type for Supabase row...');
-              const safeDbBusinesses = dbBusinesses.map((b: any) => {
-                const allowed = ['salon', 'spa', 'clinic', 'gym'];
-                const lowerType = (b.type || '').toLowerCase();
-                const safeType = allowed.includes(lowerType) ? lowerType : 'salon';
-                return { ...b, type: safeType };
-              });
-              const { error: retryErr } = await supabase.from('businesses').upsert(safeDbBusinesses);
-              if (retryErr) {
-                throw new Error(`Businesses upsert error: ${retryErr.message}`);
+            if (bizErr) {
+              if (
+                bizErr.message?.includes('businesses_type_check') || 
+                bizErr.message?.includes('check constraint') || 
+                bizErr.code === '23514'
+              ) {
+                console.warn('Businesses upsert hit legacy type constraint. Retrying with safe fallback type for Supabase row...');
+                const safeDbBusinesses = dbBusinesses.map((b: any) => {
+                  const allowed = ['salon', 'spa', 'clinic', 'gym'];
+                  const lowerType = (b.type || '').toLowerCase();
+                  const safeType = allowed.includes(lowerType) ? lowerType : 'salon';
+                  return { ...b, type: safeType };
+                });
+                const { error: retryErr } = await supabase.from('businesses').upsert(safeDbBusinesses);
+                if (retryErr) bizErr = retryErr;
+                else bizErr = null;
               }
-            } else if (bizErr) {
-              throw new Error(`Businesses upsert error: ${bizErr.message}`);
+
+              if (bizErr && isMissingTableError(bizErr)) {
+                console.warn('Businesses upsert hit missing schema column/table error:', bizErr.message);
+                const missingMatch = bizErr.message?.match(/Could not find the '([^']+)' column/i);
+                if (missingMatch && missingMatch[1]) {
+                  const colName = missingMatch[1];
+                  console.warn(`Retrying businesses upsert without missing column '${colName}'...`);
+                  const strippedDbBusinesses = dbBusinesses.map((b: any) => {
+                    const copy = { ...b };
+                    delete copy[colName];
+                    return copy;
+                  });
+                  const { error: retryErr2 } = await supabase.from('businesses').upsert(strippedDbBusinesses);
+                  if (retryErr2) console.error('Businesses fallback upsert error:', retryErr2);
+                }
+              } else if (bizErr) {
+                throw new Error(`Businesses upsert error: ${bizErr.message}`);
+              }
             }
           }
 

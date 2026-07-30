@@ -15,6 +15,9 @@ export const COUNTRY_CODES: CountryCode[] = [
   { code: '+973', flag: '🇧🇭', name: 'Bahrain', digitCount: 8 },
   { code: '+1', flag: '🇺🇸', name: 'US / Canada', digitCount: 10 },
   { code: '+44', flag: '🇬🇧', name: 'United Kingdom', digitCount: 10 },
+  { code: '+49', flag: '🇩🇪', name: 'Germany (EUR)', digitCount: 11 },
+  { code: '+61', flag: '🇦🇺', name: 'Australia', digitCount: 9 },
+  { code: '+65', flag: '🇸🇬', name: 'Singapore', digitCount: 8 },
 ];
 
 export const UAE_EMIRATES = [
@@ -41,7 +44,40 @@ export const SUPPORTED_CURRENCIES: CurrencyOption[] = [
   { code: 'GBP', symbol: '£', label: 'GBP (British Pound)' },
   { code: 'SAR', symbol: 'SAR', label: 'SAR (Saudi Riyal)' },
   { code: 'QAR', symbol: 'QAR', label: 'QAR (Qatari Riyal)' },
+  { code: 'KWD', symbol: 'KWD', label: 'KWD (Kuwaiti Dinar)' },
+  { code: 'OMR', symbol: 'OMR', label: 'OMR (Omani Rial)' },
+  { code: 'BHD', symbol: 'BHD', label: 'BHD (Bahraini Dinar)' },
+  { code: 'CAD', symbol: 'C$', label: 'CAD (Canadian Dollar)' },
+  { code: 'AUD', symbol: 'A$', label: 'AUD (Australian Dollar)' },
+  { code: 'SGD', symbol: 'S$', label: 'SGD (Singapore Dollar)' },
 ];
+
+/**
+ * Maps each supported currency code to its primary country phone dialling code.
+ */
+export const CURRENCY_TO_PHONE_CODE: Record<string, string> = {
+  AED: '+971',
+  INR: '+91',
+  USD: '+1',
+  EUR: '+49',
+  GBP: '+44',
+  SAR: '+966',
+  QAR: '+974',
+  KWD: '+965',
+  OMR: '+968',
+  BHD: '+973',
+  CAD: '+1',
+  AUD: '+61',
+  SGD: '+65',
+};
+
+/**
+ * Returns the phone country code that corresponds to a given currency code.
+ * Falls back to '+971' (UAE) if no mapping is found.
+ */
+export function getPhoneCodeForCurrency(currencyCode: string): string {
+  return CURRENCY_TO_PHONE_CODE[currencyCode] || '+971';
+}
 
 /**
  * Standardizes phone number to digits only
@@ -117,21 +153,37 @@ export function formatDisplayPhone(phone: string, countryCode = '+971'): string 
 export function formatCurrency(amount: number | undefined | null, currencyCode = 'AED'): string {
   const num = Number(amount || 0);
   const matched = SUPPORTED_CURRENCIES.find(c => c.code === currencyCode);
-  const symbol = matched ? matched.symbol : currencyCode;
-  
-  if (currencyCode === 'AED' || currencyCode === 'SAR' || currencyCode === 'QAR') {
-    return `${symbol} ${num.toLocaleString('en-US', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
-  }
+  const symbol = matched ? matched.symbol : (currencyCode || 'AED');
   
   if (currencyCode === 'INR') {
     return `₹${num.toLocaleString('en-IN')}`;
   }
 
   if (currencyCode === 'USD') {
-    return `$${num.toLocaleString('en-US')}`;
+    return `$${num.toLocaleString('en-US', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
   }
 
-  return `${symbol} ${num.toLocaleString()}`;
+  if (currencyCode === 'EUR') {
+    return `€${num.toLocaleString('de-DE', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  }
+
+  if (currencyCode === 'GBP') {
+    return `£${num.toLocaleString('en-GB', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  }
+
+  if (currencyCode === 'CAD') {
+    return `C$${num.toLocaleString('en-CA', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  }
+
+  if (currencyCode === 'AUD') {
+    return `A$${num.toLocaleString('en-AU', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  }
+
+  if (currencyCode === 'SGD') {
+    return `S$${num.toLocaleString('en-SG', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
+  }
+
+  return `${symbol} ${num.toLocaleString('en-US', { minimumFractionDigits: num % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
 }
 
 /**

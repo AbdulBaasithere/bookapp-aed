@@ -11,9 +11,13 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     owner_name TEXT NOT NULL,
     phone TEXT NOT NULL,
     upi_id TEXT,
+    currency TEXT DEFAULT 'AED',
     user_id TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Schema Migration: Ensure optional columns exist on existing databases
+ALTER TABLE public.businesses ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'AED';
 
 -- 2. Create Staff Table
 CREATE TABLE IF NOT EXISTS public.staff (

@@ -479,15 +479,15 @@ export default function PaymentsLedger({
                       <div className="bg-white p-2 rounded-xl inline-block border border-slate-100 shadow-xs">
                         <img 
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=8&data=${encodeURIComponent(
-                            `upi://pay?pa=${selectedReceipt.clientPhone}@upi&pn=${encodeURIComponent(selectedReceipt.clientName)}&am=${selectedReceipt.amount}&cu=INR&tn=${encodeURIComponent(`Receipt-${selectedReceipt.id}`)}`
+                            `upi://pay?pa=${business.upiId || 'owner@upi'}&pn=${encodeURIComponent(business.name)}&am=${selectedReceipt.amount}&cu=INR&tn=${encodeURIComponent(`Receipt-${selectedReceipt.id}`)}`
                           )}`}
-                          alt="UPI QR Code"
+                          alt="Owner UPI QR Code"
                           className="w-32 h-32 mx-auto"
                           referrerPolicy="no-referrer"
                         />
                       </div>
                       <div className="text-[10px] text-slate-500 leading-tight">
-                        <p className="font-semibold text-slate-700">UPI Payee ID: <span className="font-mono text-indigo-600">{selectedReceipt.clientPhone}@upi</span></p>
+                        <p className="font-semibold text-slate-700">Owner UPI ID: <span className="font-mono text-indigo-600 font-bold">{business.upiId || 'Not Configured (Set in Settings)'}</span></p>
                         <p className="mt-0.5">Outstanding Amount: <strong className="text-slate-800">{formatCurrency(selectedReceipt.amount, business.currency || 'AED')}</strong></p>
                       </div>
 
