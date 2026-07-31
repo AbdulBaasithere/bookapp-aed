@@ -21,7 +21,7 @@ export const DEFAULT_STAFF: Staff[] = [
   {
     id: "staff-1",
     name: "Tariq Al-Mansoor",
-    role: "Master Stylist & Director",
+    role: "Master & Director",
     workingHours: { start: "08:00", end: "21:00" },
     color: "bg-indigo-100 text-indigo-800 border-indigo-200",
     businessId: "biz-1"

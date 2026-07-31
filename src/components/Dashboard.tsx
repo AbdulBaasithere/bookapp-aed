@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Booking, Payment, Package, Staff, Client, Business } from '../types';
-import { formatCurrency } from '../utils/countryUtils';
+import { formatCurrency, getPhoneCodeForCurrency, buildWhatsAppLink } from '../utils/countryUtils';
 import { 
   TrendingUp, 
   Calendar, 
@@ -57,7 +57,11 @@ export default function Dashboard({
   liveFeed = [],
   business = { id: "biz-1", name: "Book App", type: "salon", ownerName: "Owner", phone: "9876543210" }
 }: DashboardProps) {
-  
+
+  // Derive the phone country code from the business's billing currency setting
+  const businessCountryCode = business.phoneCountryCode || getPhoneCodeForCurrency(business.currency || 'AED');
+  const businessCountryCodeDigits = businessCountryCode.replace('+', '');
+
   // Deduplicate liveFeed items to prevent key conflicts
   const uniqueLiveFeed = liveFeed.reduce((acc, current) => {
     if (!current || !current.id) return acc;
@@ -462,7 +466,7 @@ export default function Dashboard({
                         <div className="flex items-center gap-2 mt-1">
                           {assignedStaff && (
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-150 text-slate-600 bg-slate-50">
-                              Stylist: {assignedStaff.name}
+                              Assigned Staff: {assignedStaff.name}
                             </span>
                           )}
                           {b.linkedPackageId && (
@@ -681,11 +685,7 @@ export default function Dashboard({
                     ? `Happy Birthday, ${client.name}! 🎂 Sending you warmest wishes from ${business.name}! Enjoy a complimentary 10% discount on any service today!` 
                     : `Hi ${client.name}, wishing you a happy early birthday in ${daysAway} days! 🎈 Book your slot ahead at ${business.name} to celebrate!`;
                   
-                  let cleanPhone = client.phone.replace(/\D/g, '');
-                  if (cleanPhone.length === 10) {
-                    cleanPhone = '91' + cleanPhone;
-                  }
-                  const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(bdayText)}`;
+                  const waLink = buildWhatsAppLink(client.phone, bdayText, businessCountryCodeDigits || '971');
 
                   return (
                     <div 
@@ -708,7 +708,7 @@ export default function Dashboard({
                               {client.name}
                             </span>
                             <span className="text-[10px] text-slate-500 font-bold block truncate">
-                              +91 {client.phone}
+                              {businessCountryCode} {client.phone}
                             </span>
                           </div>
                         </div>
@@ -762,11 +762,7 @@ export default function Dashboard({
                   // Compute WhatsApp text
                   const waText = `Hi ${client ? client.name : 'Client'}, your package "${pkg.name}" is ${isExhausted ? 'exhausted' : `almost done (${pkg.sessionsRemaining} left)`}. Let us know when you would like to renew! - ${business.name}`;
                   
-                  let cleanPhone = pkg.clientPhone.replace(/\D/g, '');
-                  if (cleanPhone.length === 10) {
-                    cleanPhone = '91' + cleanPhone;
-                  }
-                  const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
+                  const waLink = buildWhatsAppLink(pkg.clientPhone, waText, businessCountryCodeDigits || '971');
 
                   return (
                     <div 

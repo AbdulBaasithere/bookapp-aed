@@ -154,7 +154,7 @@ export default function CalendarView({
   const [lastConflictMsg, setLastConflictMsg] = useState('');
   useEffect(() => {
     if (liveConflictMessage && liveConflictMessage !== lastConflictMsg) {
-      showToast('Stylist schedule conflict detected!', 'warning');
+      showToast('Staff schedule conflict detected!', 'warning');
       setLastConflictMsg(liveConflictMessage);
     } else if (!liveConflictMessage) {
       setLastConflictMsg('');
@@ -251,7 +251,7 @@ export default function CalendarView({
     const receiptNo = `REC-${receiptBooking.id.toUpperCase().split('-')[1] || receiptBooking.id.toUpperCase()}`;
     const dateStr = new Date(receiptBooking.dateTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     const timeStr = new Date(receiptBooking.dateTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const stylistName = staff.find(s => s.id === receiptBooking.staffId)?.name || 'Store Stylist';
+    const stylistName = staff.find(s => s.id === receiptBooking.staffId)?.name || 'Assigned Staff';
     const matchedPay = payments.find(p => p.linkedBookingId === receiptBooking.id);
     const paymentMethod = matchedPay?.method?.toUpperCase() || 'CARD';
     const totalCharged = receiptBooking.linkedPackageId ? '0.00 (Prepaid via Package)' : formatCurrency(receiptBooking.price, business.currency || 'AED');
@@ -260,7 +260,7 @@ export default function CalendarView({
       `*Receipt No:* ${receiptNo}\n` +
       `*Date:* ${dateStr} at ${timeStr}\n` +
       `*Client:* ${receiptBooking.clientName}\n` +
-      `*Stylist:* ${stylistName}\n` +
+      `*Assigned Staff:* ${stylistName}\n` +
       `---------------------------\n` +
       `*Service:* ${receiptBooking.serviceName}\n` +
       `*Duration:* ${receiptBooking.durationMinutes} mins\n` +
@@ -433,7 +433,7 @@ export default function CalendarView({
     };
 
     if (conflictRes.hasConflict) {
-      showToast('Schedule conflict detected for this stylist!', 'warning');
+      showToast('Schedule conflict detected for this staff member!', 'warning');
       setConflictOverlay({
         message: conflictRes.message,
         onProceed: proceedWithSave
@@ -472,7 +472,7 @@ export default function CalendarView({
     const bookingDate = new Date(b.dateTime);
     const dateStr = bookingDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     const timeStr = bookingDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const stylistName = staff.find(s => s.id === b.staffId)?.name || 'Store Stylist';
+    const stylistName = staff.find(s => s.id === b.staffId)?.name || 'Assigned Staff';
 
     const today = new Date();
     const isToday = bookingDate.toDateString() === today.toDateString();
@@ -501,7 +501,7 @@ export default function CalendarView({
       `⏰ *Time:* ${timeStr}\n` +
       `💇 *Service:* ${b.serviceName}\n` +
       `⌛ *Duration:* ${b.durationMinutes} mins\n` +
-      `👤 *Assigned Stylist:* ${stylistName}\n` +
+      `👤 *Assigned Staff:* ${stylistName}\n` +
       `💵 *Amount:* ${b.linkedPackageId ? 'Prepaid (Package Session)' : formatCurrency(b.price, business.currency || 'AED')}\n\n` +
       `Please let us know if you need to reschedule or have any special requests. We look forward to welcoming you! ✨`;
 
@@ -677,7 +677,7 @@ export default function CalendarView({
                   });
 
                   const staffName =
-                    staff.find((s) => s.id === b.staffId)?.name || "Stylist";
+                    staff.find((s) => s.id === b.staffId)?.name || "Staff";
 
                   return (
                     <div
@@ -701,7 +701,7 @@ export default function CalendarView({
                         </div>
 
                         <div className="text-[9px] text-indigo-500 font-extrabold uppercase tracking-wide">
-                          👤 Stylist: {staffName}
+                          👤 Assigned Staff: {staffName}
                         </div>
                       </div>
 
@@ -1141,7 +1141,7 @@ export default function CalendarView({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">Assign Staff / Stylist</label>
+                <label className="text-xs font-semibold text-slate-500">Assign Staff</label>
                 <select
                   value={formStaffId}
                   onChange={(e) => setFormStaffId(e.target.value)}
@@ -1505,9 +1505,9 @@ export default function CalendarView({
                     <span className="text-slate-950 font-semibold">{formatDisplayPhone(receiptBooking.clientPhone, business.phoneCountryCode || '+971')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">STYLIST:</span>
+                    <span className="text-slate-400">ASSIGNED STAFF:</span>
                     <span className="text-slate-900 font-semibold">
-                      {staff.find(s => s.id === receiptBooking.staffId)?.name || 'Store Stylist'}
+                      {staff.find(s => s.id === receiptBooking.staffId)?.name || 'Assigned Staff'}
                     </span>
                   </div>
                 </div>
@@ -1688,8 +1688,8 @@ export default function CalendarView({
               <span>{formatDisplayPhone(receiptBooking.clientPhone, business.phoneCountryCode || '+971')}</span>
             </div>
             <div className="flex justify-between">
-              <span>STYLIST:</span>
-              <span>{staff.find(s => s.id === receiptBooking.staffId)?.name || 'Store Stylist'}</span>
+              <span>ASSIGNED STAFF:</span>
+              <span>{staff.find(s => s.id === receiptBooking.staffId)?.name || 'Assigned Staff'}</span>
             </div>
           </div>
 
@@ -1931,7 +1931,7 @@ export default function CalendarView({
             `*Date:* ${dateStr} at ${timeStr}\n\n` +
             `*Client:* ${billBooking.clientName}\n` +
             `*Phone:* ${formatDisplayPhone(billBooking.clientPhone)}\n` +
-            `*Specialist:* ${stylistName}\n\n` +
+            `*Assigned Staff:* ${stylistName}\n\n` +
             `━━━━━━━━━━━━━━━━\n` +
             `*Service:* ${billBooking.serviceName}\n` +
             `*Duration:* ${billBooking.durationMinutes} min\n` +
@@ -1998,7 +1998,7 @@ export default function CalendarView({
                   </div>
                 </div>
 
-                {/* Client & Specialist */}
+                {/* Client & Assigned Staff */}
                 <div className="px-6 py-3 grid grid-cols-2 gap-3 text-xs border-b border-slate-100">
                   <div>
                     <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Billed To</span>
@@ -2006,7 +2006,7 @@ export default function CalendarView({
                     <span className="block text-slate-500 text-[11px]">{formatDisplayPhone(billBooking.clientPhone)}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Specialist</span>
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Assigned Staff</span>
                     <span className="font-bold text-slate-900">{stylistName}</span>
                   </div>
                 </div>

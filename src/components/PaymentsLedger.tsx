@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Payment, Client, Booking, Business } from '../types';
-import { formatCurrency } from '../utils/countryUtils';
+import { formatCurrency, getPhoneCodeForCurrency, buildWhatsAppLink } from '../utils/countryUtils';
 import { 
   Search, 
   Receipt, 
@@ -42,6 +42,11 @@ export default function PaymentsLedger({
   liveFeed = [],
   business = { id: "biz-1", name: "Book App", type: "salon", ownerName: "Owner", phone: "9876543210" }
 }: PaymentsLedgerProps) {
+
+  // Derive the phone country code from the business's billing currency setting
+  const businessCountryCode = business.phoneCountryCode || getPhoneCodeForCurrency(business.currency || 'AED');
+  const businessCountryCodeDigits = businessCountryCode.replace('+', '');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'paid' | 'due'>('all');
   const [selectedReceipt, setSelectedReceipt] = useState<Payment | null>(null);
@@ -140,12 +145,7 @@ export default function PaymentsLedger({
       `📌 *Status:* ${statusIcon} ${paymentMode}\n\n` +
       `Thank you for your business! - ${business.name}`;
 
-    let cleanPhone = p.clientPhone.replace(/\D/g, '');
-    if (cleanPhone.length === 10) {
-      cleanPhone = '91' + cleanPhone;
-    }
-
-    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(receiptMsg)}`;
+    return buildWhatsAppLink(p.clientPhone, receiptMsg, businessCountryCodeDigits || '971');
   };
 
   return (
@@ -445,7 +445,7 @@ export default function PaymentsLedger({
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Client Phone:</span>
-                    <span className="font-semibold text-slate-700">+91 {selectedReceipt.clientPhone}</span>
+                    <span className="font-semibold text-slate-700">{businessCountryCode} {selectedReceipt.clientPhone}</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Transaction Class:</span>
@@ -573,7 +573,7 @@ export default function PaymentsLedger({
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500">Client Mobile (10 digits)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">+91</span>
+                  <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">{businessCountryCode}</span>
                   <input 
                     type="tel"
                     placeholder="e.g. 9844332211"

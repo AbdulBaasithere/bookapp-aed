@@ -561,7 +561,7 @@ export default function SettingsConfig({
                       {getBusinessEmoji(b.type)} {b.type} • {b.ownerName}
                     </p>
                     <p className="text-[10px] text-slate-400 font-bold mt-0.5">
-                      Phone: +91 {b.phone}
+                      Phone: {b.phoneCountryCode || getPhoneCodeForCurrency(b.currency || 'AED')} {b.phone}
                     </p>
                   </div>
 
@@ -651,7 +651,7 @@ export default function SettingsConfig({
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Business Contact (Mobile)</label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">+971</span>
+                <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">{getPhoneCodeForCurrency(bCurrency)}</span>
                 <input 
                   type="tel"
                   value={bPhone}
@@ -715,7 +715,7 @@ export default function SettingsConfig({
         <div className="flex justify-between items-center">
           <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
             <Users className="h-4.5 w-4.5 text-indigo-500" />
-            <span>Staff Slots & Chairs (Chairs, Stylists, Rooms)</span>
+            <span>Staff Slots & Chairs (Chairs, Rooms)</span>
           </h2>
           <button
             onClick={() => setIsAddingStaff(!isAddingStaff)}
@@ -728,7 +728,7 @@ export default function SettingsConfig({
         {/* Staff details creation form */}
         {isAddingStaff && (
           <form onSubmit={handleAddStaffSubmit} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
-            <h3 className="text-xs font-bold text-slate-800">Add New Active Stylist / Resource Column</h3>
+            <h3 className="text-xs font-bold text-slate-800">Add New Active Staff / Resource Column</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="space-y-1">

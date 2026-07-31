@@ -94,7 +94,8 @@ import {
  */
 export function getTomorrowWhatsAppReminders(
   bookings: Booking[],
-  businessName: string = "Book App"
+  businessName: string = "Book App",
+  countryCode: string = '+971'
 ): Array<{ booking: Booking; whatsAppLink: string }> {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -124,7 +125,7 @@ export function getTomorrowWhatsAppReminders(
 
     let cleanPhone = b.clientPhone.replace(/\D/g, '');
     if (cleanPhone.length === 10) {
-      cleanPhone = '91' + cleanPhone;
+      cleanPhone = countryCode.replace('+', '') + cleanPhone;
     }
 
     const whatsAppLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
@@ -514,7 +515,7 @@ export default function App() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).getTomorrowWhatsAppReminders = (customBookings?: Booking[]) => {
-        return getTomorrowWhatsAppReminders(customBookings || bookings, business.name);
+        return getTomorrowWhatsAppReminders(customBookings || bookings, business.name, business.phoneCountryCode || '+971');
       };
     }
   }, [bookings, business.name]);
